@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movie Rating Predictor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      color: #f5c518;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 36px;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: #1a1a2e;
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #f5c518;
+      margin-bottom: 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+
+    label {
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      background: #0f0f1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #e0e0e0;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #f5c518;
+    }
+
+    input::placeholder { color: #555; }
+
+    .genres-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .genre-chip input { display: none; }
+
+    .genre-chip label {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #333;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: #aaa;
+      transition: all 0.2s;
+    }
+
+    .genre-chip input:checked + label {
+      background: #f5c518;
+      color: #0f0f1a;
+      border-color: #f5c518;
+      font-weight: 600;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .toggle-option input { display: none; }
+
+    .toggle-option label {
+      padding: 8px 20px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #aaa;
+      transition: all 0.2s;
+    }
+
+    .toggle-option input:checked + label {
+      background: #f5c518;
+      color: #0f0f1a;
+      border-color: #f5c518;
+      font-weight: 600;
+    }
+
+    .btn-predict {
+      width: 100%;
+      padding: 14px;
+      background: #f5c518;
+      color: #0f0f1a;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-predict:hover { background: #e6b800; }
+    .btn-predict:active { transform: scale(0.98); }
+    .btn-predict:disabled { background: #555; cursor: not-allowed; }
+
+    #result {
+      display: none;
+      text-align: center;
+      padding: 28px;
+      border-radius: 12px;
+      margin-top: 16px;
+    }
+
+    #result.success {
+      background: #1a2a1a;
+      border: 1px solid #2d6a2d;
+    }
+
+    #result.error {
+      background: #2a1a1a;
+      border: 1px solid #6a2d2d;
+    }
+
+    #result .rating-label {
+      font-size: 0.9rem;
+      color: #aaa;
+      margin-bottom: 8px;
+    }
+
+    #result .rating-value {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #f5c518;
+    }
+
+    #result .rating-suffix {
+      font-size: 1.2rem;
+      color: #888;
+    }
+
+    #result .error-msg {
+      color: #e05555;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Movie Rating Predictor</h1>
+    <p class="subtitle">Fill in the movie details below to get a predicted IMDb rating</p>
+
+    <div class="card">
+      <div class="section-title">Basic Info</div>
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label for="primaryTitle">Movie Title</label>
+          <input type="text" id="primaryTitle" placeholder="e.g. The Dark Knight" />
+        </div>
+        <div class="form-group">
+          <label for="startYear">Release Year <span style="color:#e05555">*</span></label>
+          <input type="number" id="startYear" placeholder="e.g. 2008" min="1900" max="2030" />
+        </div>
+        <div class="form-group">
+          <label for="runtimeMinutes">Runtime (minutes) <span style="color:#e05555">*</span></label>
+          <input type="number" id="runtimeMinutes" placeholder="e.g. 152" min="1" max="600" />
+        </div>
+        <div class="form-group">
+          <label for="budget">Budget</label>
+          <input type="text" id="budget" placeholder='e.g. $185 million' />
+        </div>
+        <div class="form-group">
+          <label for="num_actors">Number of Lead Actors (0-5)</label>
+          <input type="number" id="num_actors" placeholder="e.g. 3" min="0" max="5" />
+        </div>
+        <div class="form-group">
+          <label for="country">Country</label>
+          <input type="text" id="country" placeholder="e.g. United States" />
+        </div>
+        <div class="form-group">
+          <label for="language">Language</label>
+          <input type="text" id="language" placeholder="e.g. English" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Genres (select all that apply)</div>
+      <div class="genres-grid">
+        <div class="genre-chip"><input type="checkbox" id="g_drama" value="Drama" /><label for="g_drama">Drama</label></div>
+        <div class="genre-chip"><input type="checkbox" id="g_comedy" value="Comedy" /><label for="g_comedy">Comedy</label></div>
+        <div class="genre-chip"><input type="checkbox" id="g_documentary" value="Documentary" /><label for="g_documentary">Documentary</label></div>
+        <div class="genre-chip"><input type="checkbox" id="g_romance" value="Romance" /><label for="g_romance">Romance</label></div>
+        <div class="genre-chip"><input type="checkbox" id="g_action" value="Action" /><label for="g_action">Action</label></div>
+        <div class="genre-chip"><input type="checkbox" id="g_crime" value="Crime" /><label for="g_crime">Crime</label></div>
+        <div class="genre-chip"><input type="checkbox" id="g_thriller" value="Thriller" /><label for="g_thriller">Thriller</label></div>
+        <div class="genre-chip"><input type="checkbox" id="g_horror" value="Horror" /><label for="g_horror">Horror</label></div>
+        <div class="genre-chip"><input type="checkbox" id="g_adventure" value="Adventure" /><label for="g_adventure">Adventure</label></div>
+        <div class="genre-chip"><input type="checkbox" id="g_mystery" value="Mystery" /><label for="g_mystery">Mystery</label></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Plot Summary Available?</div>
+      <div class="toggle-group">
+        <div class="toggle-option">
+          <input type="radio" name="has_plot" id="plot_yes" value="1" />
+          <label for="plot_yes">Yes</label>
+        </div>
+        <div class="toggle-option">
+          <input type="radio" name="has_plot" id="plot_no" value="0" checked />
+          <label for="plot_no">No</label>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-predict" onclick="predict()">Predict Rating</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    function showResult(type, html) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.className = type;
+      resultDiv.style.display = 'block';
+      resultDiv.innerHTML = html;
+    }
+
+    async function predict() {
+      const btn = document.querySelector('.btn-predict');
+
+      const startYear = document.getElementById('startYear').value.trim();
+      const runtimeMinutes = document.getElementById('runtimeMinutes').value.trim();
+
+      if (!startYear || !runtimeMinutes) {
+        showResult('error', '<div class="error-msg">Release Year and Runtime are required fields.</div>');
+        return;
+      }
+
+      const genres = [...document.querySelectorAll('.genre-chip input:checked')].map(el => el.value);
+      const hasPlot = document.querySelector('input[name="has_plot"]:checked').value;
+
+      const payload = {
+        startYear:      parseInt(startYear),
+        runtimeMinutes: parseInt(runtimeMinutes),
+        budget:         document.getElementById('budget').value.trim(),
+        primaryTitle:   document.getElementById('primaryTitle').value.trim(),
+        num_actors:     parseInt(document.getElementById('num_actors').value || '0'),
+        country:        document.getElementById('country').value.trim(),
+        language:       document.getElementById('language').value.trim(),
+        genres:         genres,
+        has_plot:       hasPlot,
+      };
+
+      btn.disabled = true;
+      btn.textContent = 'Predicting...';
+
+      try {
+        const response = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showResult('error', `<div class="error-msg">Error: ${data.error || 'An error occurred.'}</div>`);
+        } else {
+          showResult('success', `
+            <div class="rating-label">Predicted IMDb Rating</div>
+            <div class="rating-value">${data.predicted_rating} <span class="rating-suffix">/ 10</span></div>
+          `);
+        }
+      } catch (err) {
+        showResult('error', '<div class="error-msg">Could not connect to the server. Make sure api.py is running.</div>');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Predict Rating';
+      }
+    }
+  </script>
+</body>
+</html>
